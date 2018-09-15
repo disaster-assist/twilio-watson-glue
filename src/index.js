@@ -34,12 +34,10 @@ function main(params) {
         version: '2018-02-16'
     });
 
-    var workspace_id = ''; // replace with workspace ID
-
     // Start conversation with empty message.
     service.message({
         input: {text: "What time is it"},
-        workspace_id: workspace_id
+        workspace_id: WATSON_WORKSPACE_ID
     }, processResponse);
 
     // Process the service response.
