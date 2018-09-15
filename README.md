@@ -1,3 +1,5 @@
+![Logo](art/Logo.png)
+
 # twilio-watson-glue
 
 [![Build Status](https://travis-ci.org/disaster-assist/twilio-watson-glue.svg?branch=master)](https://travis-ci.org/disaster-assist/twilio-watson-glue)
