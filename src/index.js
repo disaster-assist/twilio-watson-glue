@@ -109,7 +109,7 @@ function main(params) {
                       })
         }
     }).then((resp) => {
-        console.log("Message sent! " + resp)
+        console.log("Message sent! " + resp);
         return {
             headers: {
                 'Content-Type': 'text/xml',
@@ -118,79 +118,19 @@ function main(params) {
             body: ''
         };
     }).catch(err => {
-        console.log("Error occured!")
-        throw err;
-    });
+        console.log("Error occurred!");
 
-
-    /*return new Promise((resolve, reject) => {
-        //Query Cloudant for our state information
-        return conversations.find({
-            selector: {
-                phone: params.From
-            }
-        }, function (err, data) {
-            if (err) throw err;
-
-
-
-            //Push our request into Watson assistant to generate a textual response
-            // and a new conversation state
-            return watsonService.message({
-                input: {text: params.Body},
-                workspace_id: WATSON_WORKSPACE_ID,
-                context: state.watsonContext
-            }, function (watsonErr, watsonResponse) {
-                if (watsonErr) throw watsonErr;
-
-                state.watsonContext = watsonResponse.context;
-
-                //Insert the new conversation state into Cloudant
-                return conversations.insert(state, function (newErr, newResult) {
-                    if (newErr) throw err;
-
-                    console.log('Updated state document');
-
-                    console.log('Watson response:');
-                    for (let message of watsonResponse.output.text) {
-                        console.log(message);
-                    }
-
-                    //Send the response from Watson Assistant back to the sender
-                    // via the Twilio API
-                    if (watsonResponse.output.text.length > 0) {
-                        return client.messages
-                            .create({
-                                to: params.From,
-                                from: TWILIO_FROM_NUMBER,
-                                body: watsonResponse.output.text.join("\n"),
-                            })
-                            .then((resp) => {
-                                console.log("Message sent! " + resp)
-                                resolve({
-                                    headers: {
-                                        'Content-Type': 'text/xml',
-                                    },
-                                    statusCode: 200,
-                                    body: ''
-                                });
-                            })
-                            .catch((err) => {
-                                console.err("Error: " + err);
-                                throw err
-                            });
-                    } else {
-                        return reject('no watson response');
-                    }
-                })
-            });
-
-
-        });
-    });*/
-
-
-};
+        return client.messages
+          .create({
+                      to: params.From,
+                      from: TWILIO_FROM_NUMBER,
+                      body: "An internal error occured: " + err
+                  })
+          .then(resp => {
+              console.error("Send error text message to " + params.From);
+          })
+    })
+}
 
 module.exports = {
     main
