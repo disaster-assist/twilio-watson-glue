@@ -7,5 +7,4 @@ git:
 before_install:
   - echo -e "machine github.com\n  login $CI_USER_TOKEN" > ~/.netrc
   - git submodule update --init --recursive 
-script: npx webpack
-after_success: yarn deploy:update
+script: yarn deploy:update
