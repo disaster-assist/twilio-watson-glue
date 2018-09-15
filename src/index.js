@@ -33,56 +33,69 @@ const conversations = cloudant.db.use('conversations');
  * the OpenWhisk application that glues Twilio to our Watson Assistant
  */
 function main(params) {
-    //Query Cloudant for our state information
-    return conversations.find({
-        selector: {
-            phone: 16034653947
-        }
-    }, function (err, data) {
-        if (err) throw err;
-
-        let state;
-        if (data.docs.length === 1) {
-            state = data.docs[0];
-        } else {
-            state = {
-                phone: 16034653947,
-                watsonContext: null
+    return new Promise((resolve, reject) => {
+        //Query Cloudant for our state information
+        return conversations.find({
+            selector: {
+                phone: 16034653947
             }
-        }
+        }, function (err, data) {
+            if (err) throw err;
 
-        return watsonService.message({
-            input: {text: 'What time is it'},
-            workspace_id: WATSON_WORKSPACE_ID,
-            context: state.watsonContext
-        }, function (watsonErr, watsonResponse) {
-            if (watsonErr) throw err;
-
-            state.watsonContext = watsonResponse.context;
-
-            console.log('Watson response:');
-            for (let message of watsonResponse.output.text) {
-                client.messages
-                    .create({
-                        to: '+17205562453',
-                        from: '+18508765124',
-                        body: 'Tomorrow\'s forecast in Financial District, San Francisco is Clear',
-                        mediaUrl: 'https://climacons.herokuapp.com/clear.png',
-                    });
+            let state;
+            if (data.docs.length === 1) {
+                state = data.docs[0];
+            } else {
+                state = {
+                    phone: 16034653947,
+                    watsonContext: null
+                }
             }
 
-            return conversations.insert(state, function (newErr, newResult) {
-                if (newErr) throw err;
+            return watsonService.message({
+                input: {text: 'What time is it'},
+                workspace_id: WATSON_WORKSPACE_ID,
+                context: state.watsonContext
+            }, function (watsonErr, watsonResponse) {
+                if (watsonErr) throw err;
 
-                console.log('Updated state document')
-            })
+                state.watsonContext = watsonResponse.context;
+
+                return conversations.insert(state, function (newErr, newResult) {
+                    if (newErr) throw err;
+
+                    console.log('Updated state document');
+
+                    console.log('Watson response:');
+                    for (let message of watsonResponse.output.text) {
+                        console.log(message);
+                    }
+
+                    if (watsonResponse.output.text.length > 0) {
+                        client.messages
+                            .create({
+                                to: '+17205562453',
+                                from: '+18508765124',
+                                body: 'Tomorrow\'s forecast in Financial District, San Francisco is Clear',
+                                mediaUrl: 'https://climacons.herokuapp.com/clear.png',
+                            })
+                            .then(() => {
+                                return resolve();
+                            }, (err) => {
+                                return reject(err);
+                            });
+                    } else {
+                        return reject('no watson response');
+                    }
+                })
+            });
+
+
         });
-
-
     });
 
 
-}
+};
 
 module.exports = {
     main
