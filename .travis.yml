@@ -13,5 +13,6 @@ before_install:
 - ssh-add ./travis_deploy
 - echo -e "machine github.com\n  login $CI_USER_TOKEN" > ~/.netrc
 - git submodule update --init --recursive
+- curl -sL https://ibm.biz/idt-installer | bash
 
 script: yarn deploy:update
