@@ -8,7 +8,7 @@
   "license": "MIT",
   "private": true,
   "scripts": {
-    "build": "yarn run webpack",
+    "build": "webpack",
     "deploy:create": "yarn build && ibmcloud fn action create twilio-watson-glue dist/index.min.js --web true",
     "deploy:update": "yarn build && ibmcloud fn action update twilio-watson-glue dist/index.min.js",
     "deploy:delete": "ibmcloud fn action delete twilio-watson-glue",

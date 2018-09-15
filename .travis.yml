@@ -15,12 +15,11 @@ before_install:
 - echo -e "machine github.com\n  login $CI_USER_TOKEN" > ~/.netrc
 - git submodule update --init --recursive
 - curl -sL https://ibm.biz/idt-installer | bash
-- npm install webpack-cli
 
 script: true
 
 deploy:
   provider: script
-  script: bash scripts/travis_deploy.sh
+  script: ./scripts/travis_deploy.sh
   on:
     branch: master
