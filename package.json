@@ -12,5 +12,8 @@
     "deploy:update": "ibmcloud fn action update twilio-watson-glue src/index.js",
     "deploy:delete": "ibmcloud fn action delete twilio-watson-glue",
     "deploy:invoke": "ibmcloud fn action invoke twilio-watson-glue --blocking --result"
+  },
+  "dependencies": {
+    "watson-developer-cloud": "^3.10.0"
   }
 }
