@@ -89,3 +89,5 @@ function main(params) {
 module.exports = {
     main
 };
+
+global.main = main
