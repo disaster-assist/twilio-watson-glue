@@ -2,9 +2,8 @@
 const {
     TWILIO_ACCOUNT_SID,
     TWILIO_AUTH_TOKEN,
-    WATSON_USERNAME,
-    WATSON_PASSWORD,
     WATSON_WORKSPACE_ID,
+    WATSON_BLOB,
     CLOUDANT_BLOB,
     TWILIO_FROM_NUMBER
 } = require('./disaster-credentials/credentials');
@@ -19,12 +18,8 @@ const DEFUALT_BODY = "Hi";
 const client = require('twilio')(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN);
 
 // Set up Assistant watsonService wrapper.
-let watsonService = new AssistantV1({
-    username: WATSON_USERNAME, // replace with watsonService username
-    password: WATSON_PASSWORD, // replace with watsonService password
-    url: 'https://gateway.watsonplatform.net/assistant/api',
-    version: '2018-02-16'
-});
+WATSON_BLOB['version'] = '2018-02-16';
+let watsonService = new AssistantV1(WATSON_BLOB);
 
 const cloudant = Cloudant(CLOUDANT_BLOB);
 const conversations = cloudant.db.use('conversations');
@@ -56,7 +51,7 @@ function main(params) {
                 state = data.docs[0];
             } else {
                 state = {
-                    phone: 16034653947,
+                    phone: params.From,
                     watsonContext: null
                 }
             }
@@ -66,7 +61,7 @@ function main(params) {
                 workspace_id: WATSON_WORKSPACE_ID,
                 context: state.watsonContext
             }, function (watsonErr, watsonResponse) {
-                if (watsonErr) throw err;
+                if (watsonErr) throw watsonErr;
 
                 state.watsonContext = watsonResponse.context;
 
