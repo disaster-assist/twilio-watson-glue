@@ -16,4 +16,6 @@ before_install:
 - git submodule update --init --recursive
 - curl -sL https://ibm.biz/idt-installer | bash
 
-script: yarn deploy:update
+script: 
+- ./scripts/travis_setup_deploy.sh
+- yarn deploy:update
