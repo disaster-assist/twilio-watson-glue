@@ -5,7 +5,8 @@ const {
     WATSON_USERNAME,
     WATSON_PASSWORD,
     WATSON_WORKSPACE_ID,
-    CLOUDANT_BLOB
+    CLOUDANT_BLOB,
+    TWILIO_FROM_NUMBER
 } = require('./disaster-credentials/credentials');
 
 const Cloudant = require('@cloudant/cloudant');
@@ -75,7 +76,7 @@ function main(params) {
                         client.messages
                             .create({
                                 to: '+17205562453',
-                                from: '+18508765124',
+                                from: TWILIO_FROM_NUMBER,
                                 body: 'Tomorrow\'s forecast in Financial District, San Francisco is Clear',
                                 mediaUrl: 'https://climacons.herokuapp.com/clear.png',
                             })
