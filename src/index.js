@@ -27,9 +27,9 @@ const conversations = cloudant.db.use('conversations');
 
 /**
  * main()
- * 
+ *
  * function
- * 
+ *
  * the OpenWhisk application that glues Twilio to our Watson Assistant
  */
 function main(params) {
@@ -40,7 +40,7 @@ function main(params) {
         }
     }, function (err, data) {
         if (err) throw err;
-        
+
         let state;
         if (data.docs.length === 1) {
             state = data.docs[0];
@@ -61,11 +61,17 @@ function main(params) {
             state.watsonContext = watsonResponse.context;
 
             console.log('Watson response:');
-            for (var message of watsonResponse.output.text) {
-                console.log(message)
+            for (let message of watsonResponse.output.text) {
+                client.messages
+                    .create({
+                        to: '+17205562453',
+                        from: '+18508765124',
+                        body: 'Tomorrow\'s forecast in Financial District, San Francisco is Clear',
+                        mediaUrl: 'https://climacons.herokuapp.com/clear.png',
+                    });
             }
 
-            conversations.insert(state, function (newErr, newResult) {
+            return conversations.insert(state, function (newErr, newResult) {
                 if (newErr) throw err;
 
                 console.log('Updated state document')
@@ -74,17 +80,6 @@ function main(params) {
 
 
     });
-    /*var result = conversations.insert({'phone': '16034653947', 'watson-context': 'test'}, function(err, result) {
-        console.log('Inserted: ' + err + result);
-
-        return client.messages
-          .create({
-                      to: '+17205562453',
-                      from: '+18508765124',
-                      body: 'Tomorrow's forecast in Financial District, San Francisco is Clear',
-                      mediaUrl: 'https://climacons.herokuapp.com/clear.png',
-                  });
-    });*/
 
 
 }
@@ -93,4 +88,4 @@ module.exports = {
     main
 };
 
-global.main = main
+global.main = main;
