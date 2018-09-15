@@ -14,8 +14,9 @@ const AssistantV1 = require('watson-developer-cloud/assistant/v1');
 const DEFAULT_NUMBER = '+17205562453';
 const DEFUALT_BODY = "Hi";
 
+const twilio = require('twilio');
 //Require the Twilio module and create a REST client
-const client = require('twilio')(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN);
+const client = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN);
 
 // Set up Assistant watsonService wrapper.
 WATSON_BLOB['version'] = '2018-02-16';
@@ -84,7 +85,13 @@ function main(params) {
                             })
                             .then((resp) => {
                                 console.log("Message sent! " + resp)
-                                resolve()
+                                resolve({
+                                    headers: {
+                                        'Content-Type': 'text/xml',
+                                    },
+                                    statusCode: 200,
+                                    body: ''
+                                });
                             })
                             .catch((err) => {
                                 console.err("Error: " + err);
