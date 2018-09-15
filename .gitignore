@@ -62,3 +62,4 @@ typings/
 
 .idea
 credentials.sh
+src/credentials.json

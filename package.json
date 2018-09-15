@@ -8,13 +8,18 @@
   "license": "MIT",
   "private": true,
   "scripts": {
-    "deploy:create": "ibmcloud fn action create twilio-watson-glue src/index.js",
+    "deploy:create": "ibmcloud fn action create twilio-watson-glue src/index.js --web true",
     "deploy:update": "ibmcloud fn action update twilio-watson-glue src/index.js",
     "deploy:delete": "ibmcloud fn action delete twilio-watson-glue",
     "deploy:invoke": "ibmcloud fn action invoke twilio-watson-glue --blocking --result"
   },
   "dependencies": {
-    "watson-developer-cloud": "^3.10.0",
+    "twilio": "^3.19.2",
+    "watson-developer-cloud": "^3.10.0"
+  },
+  "devDependencies": {
+    "chai": "^4.1.2",
+    "mocha": "^5.2.0",
     "webpack": "^4.19.0",
     "webpack-cli": "^3.1.0"
   }
