@@ -1,2 +1,2 @@
 main = require('./index');
-main.main()
+main.main({})

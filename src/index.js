@@ -12,6 +12,9 @@ const {
 const Cloudant = require('@cloudant/cloudant');
 const AssistantV1 = require('watson-developer-cloud/assistant/v1');
 
+const DEFAULT_NUMBER = '+17205562453';
+const DEFUALT_BODY = "Hi";
+
 //Require the Twilio module and create a REST client
 const client = require('twilio')(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN);
 
@@ -34,11 +37,16 @@ const conversations = cloudant.db.use('conversations');
  * the OpenWhisk application that glues Twilio to our Watson Assistant
  */
 function main(params) {
+    if (params.From == null) {
+        params.From = DEFAULT_NUMBER;
+        params.Body = DEFUALT_BODY;
+    }
+
     return new Promise((resolve, reject) => {
         //Query Cloudant for our state information
         return conversations.find({
             selector: {
-                phone: 16034653947
+                phone: params.From
             }
         }, function (err, data) {
             if (err) throw err;
@@ -54,7 +62,7 @@ function main(params) {
             }
 
             return watsonService.message({
-                input: {text: 'What time is it'},
+                input: {text: params.Body},
                 workspace_id: WATSON_WORKSPACE_ID,
                 context: state.watsonContext
             }, function (watsonErr, watsonResponse) {
@@ -75,15 +83,17 @@ function main(params) {
                     if (watsonResponse.output.text.length > 0) {
                         client.messages
                             .create({
-                                to: '+17205562453',
+                                to: params.From,
                                 from: TWILIO_FROM_NUMBER,
-                                body: 'Tomorrow\'s forecast in Financial District, San Francisco is Clear',
-                                mediaUrl: 'https://climacons.herokuapp.com/clear.png',
+                                body: watsonResponse.output.text.join("\n"),
                             })
-                            .then(() => {
-                                return resolve();
-                            }, (err) => {
-                                return reject(err);
+                            .then((resp) => {
+                                console.log("Message sent! " + resp)
+                                resolve()
+                            })
+                            .catch((err) => {
+                                console.err("Error: " + err);
+                                throw err
                             });
                     } else {
                         return reject('no watson response');
