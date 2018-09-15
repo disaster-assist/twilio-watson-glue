@@ -8,10 +8,12 @@
   "license": "MIT",
   "private": true,
   "scripts": {
-    "deploy:create": "ibmcloud fn action create twilio-watson-glue dist/index.min.js --web true",
-    "deploy:update": "ibmcloud fn action update twilio-watson-glue dist/index.min.js",
+    "build": "webpack",
+    "deploy:create": "yarn build && ibmcloud fn action create twilio-watson-glue dist/index.min.js --web true",
+    "deploy:update": "yarn build && ibmcloud fn action update twilio-watson-glue dist/index.min.js",
     "deploy:delete": "ibmcloud fn action delete twilio-watson-glue",
-    "deploy:invoke": "ibmcloud fn action invoke twilio-watson-glue --blocking --result"
+    "deploy:invoke": "ibmcloud fn action invoke twilio-watson-glue --blocking --result",
+    "deploy:upvoke": "yarn deploy:update && yarn deploy:invoke"
   },
   "dependencies": {
     "@cloudant/cloudant": "^2.3.0",
