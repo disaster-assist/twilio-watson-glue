@@ -21,7 +21,7 @@ module.exports = {
 
     target: 'node',
     output: {
-        filename: 'main.js',
+        filename: 'index.min.js',
         path: path.resolve(__dirname, 'dist')
     },
     /*plugins: [
