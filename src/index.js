@@ -8,6 +8,8 @@ const {
     TWILIO_FROM_NUMBER
 } = require('./disaster-credentials/credentials');
 
+var _ = require('underscore');
+
 //Default values for when we invoke this locally on test machines
 const DEFAULT_NUMBER = '+17205562453';
 const DEFUALT_BODY = "Hi";
@@ -21,11 +23,10 @@ const twilio = require('twilio');
 const client = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN);
 
 //Initialize Assistant Watson Service wrapper
-WATSON_BLOB['version'] = '2018-02-16';
-let watsonService = new AssistantV1(WATSON_BLOB);
+let watsonService = new AssistantV1(_.extend(WATSON_BLOB, {'version': '2018-02-16'}));
 
 //Initialize Cloudant connection
-const cloudant = Cloudant(CLOUDANT_BLOB);
+const cloudant = Cloudant(_.extend(CLOUDANT_BLOB, {'plugins': 'promises'}));
 const conversations = cloudant.db.use('conversations');
 
 /**
@@ -45,9 +46,84 @@ function main(params) {
         params.Body = DEFUALT_BODY;
     }
 
-    //Since this code was written for a hackathon, it's not quite "production ready".
-    //This promise wraps our chain of indented callback functions.
-    return new Promise((resolve, reject) => {
+
+    return conversations.find({
+                                  selector: {
+                                      phone: params.From
+                                  }
+                              }
+    ).then((data) => {
+        //If Cloudant had a conversation state for us, use it.
+        // If not, instatiate a new one
+        let state;
+        if (data.docs.length === 1) {
+            state = data.docs[0];
+        } else {
+            state = {
+                phone: params.From,
+                watsonContext: null
+            }
+        }
+        return state;
+    }).then(state => {
+        return new Promise(function(resolve, reject) {
+            watsonService.message(
+              {
+                  input: {text: params.Body},
+                  workspace_id: WATSON_WORKSPACE_ID,
+                  context: state.watsonContext
+              },
+              function(watsonErr, watsonResponse)  {
+                  if (watsonErr != null) {
+                      reject(watsonErr)
+                  } else {
+                      resolve(watsonResponse)
+                  }
+              })
+        })
+          .then(watsonResponse => {
+              return {
+                  state: state,
+                  watsonResponse: watsonResponse
+              }
+          })
+    }).then(data => {
+        return conversations.insert(data.state)
+          .then(_ => data.watsonResponse)
+    }).then(watsonResponse => {
+        console.log('Updated state document');
+
+        console.log('Watson response:');
+        for (let message of watsonResponse.output.text) {
+            console.log(message);
+        }
+
+        //Send the response from Watson Assistant back to the sender
+        // via the Twilio API
+        if (watsonResponse.output.text.length > 0) {
+            return client.messages
+              .create({
+                          to: params.From,
+                          from: TWILIO_FROM_NUMBER,
+                          body: watsonResponse.output.text.join("\n"),
+                      })
+        }
+    }).then((resp) => {
+        console.log("Message sent! " + resp)
+        return {
+            headers: {
+                'Content-Type': 'text/xml',
+            },
+            statusCode: 200,
+            body: ''
+        };
+    }).catch(err => {
+        console.log("Error occured!")
+        throw err;
+    });
+
+
+    /*return new Promise((resolve, reject) => {
         //Query Cloudant for our state information
         return conversations.find({
             selector: {
@@ -56,17 +132,7 @@ function main(params) {
         }, function (err, data) {
             if (err) throw err;
 
-            //If Cloudant had a conversation state for us, use it.
-            // If not, instatiate a new one
-            let state;
-            if (data.docs.length === 1) {
-                state = data.docs[0];
-            } else {
-                state = {
-                    phone: params.From,
-                    watsonContext: null
-                }
-            }
+
 
             //Push our request into Watson assistant to generate a textual response
             // and a new conversation state
@@ -121,7 +187,7 @@ function main(params) {
 
 
         });
-    });
+    });*/
 
 
 };

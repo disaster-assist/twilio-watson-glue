@@ -18,6 +18,7 @@
   "dependencies": {
     "@cloudant/cloudant": "^2.3.0",
     "twilio": "^3.19.2",
+    "underscore": "^1.9.1",
     "watson-developer-cloud": "^3.10.0"
   },
   "devDependencies": {
