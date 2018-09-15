@@ -1,0 +1,11 @@
+language: node_js
+node_js: "8"
+
+git:
+  submodules: false
+
+
+before_install:
+  - echo -e "machine github.com\n  login $CI_USER_TOKEN" > ~/.netrc
+  - git submodule update --init --recursive 
+script: yarn deploy:update
