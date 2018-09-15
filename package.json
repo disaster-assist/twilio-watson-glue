@@ -14,6 +14,7 @@
     "deploy:invoke": "ibmcloud fn action invoke twilio-watson-glue --blocking --result"
   },
   "dependencies": {
+    "@cloudant/cloudant": "^2.3.0",
     "twilio": "^3.19.2",
     "watson-developer-cloud": "^3.10.0"
   },
