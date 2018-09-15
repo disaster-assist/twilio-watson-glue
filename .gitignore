@@ -66,3 +66,4 @@ src/credentials.json
 src/credentials.js
 
 dist
+*.iml
