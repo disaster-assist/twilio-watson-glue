@@ -29,6 +29,12 @@ let watsonService = new AssistantV1(_.extend(WATSON_BLOB, {'version': '2018-02-1
 const cloudant = Cloudant(_.extend(CLOUDANT_BLOB, {'plugins': 'promises'}));
 const conversations = cloudant.db.use('conversations');
 
+function handleWatsonResponse(watsonResponse) {
+    for (var intent of watsonResponse.intents) {
+        
+    }
+}
+
 /**
  * main()
  *
