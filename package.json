@@ -14,6 +14,8 @@
     "deploy:invoke": "ibmcloud fn action invoke twilio-watson-glue --blocking --result"
   },
   "dependencies": {
-    "watson-developer-cloud": "^3.10.0"
+    "watson-developer-cloud": "^3.10.0",
+    "webpack": "^4.19.0",
+    "webpack-cli": "^3.1.0"
   }
 }
