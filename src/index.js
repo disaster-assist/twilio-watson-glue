@@ -6,7 +6,7 @@ const {
     WATSON_PASSWORD,
     WATSON_WORKSPACE_ID,
     CLOUDANT_BLOB
-} = require('./credentials');
+} = require('./disaster-credentials/credentials');
 
 const Cloudant = require('@cloudant/cloudant');
 const AssistantV1 = require('watson-developer-cloud/assistant/v1');
