@@ -14,71 +14,74 @@ const AssistantV1 = require('watson-developer-cloud/assistant/v1');
 //Require the Twilio module and create a REST client
 const client = require('twilio')(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN);
 
+// Set up Assistant watsonService wrapper.
+let watsonService = new AssistantV1({
+    username: WATSON_USERNAME, // replace with watsonService username
+    password: WATSON_PASSWORD, // replace with watsonService password
+    url: 'https://gateway.watsonplatform.net/assistant/api',
+    version: '2018-02-16'
+});
+
+const cloudant = Cloudant(CLOUDANT_BLOB);
+const conversations = cloudant.db.use('conversations');
+
 /**
- * Hello world as an OpenWhisk action.
+ * main()
+ * 
+ * function
+ * 
+ * the OpenWhisk application that glues Twilio to our Watson Assistant
  */
 function main(params) {
-
-    // Set up Assistant service wrapper.
-    let service = new AssistantV1({
-                                      username: WATSON_USERNAME, // replace with service username
-                                      password: WATSON_PASSWORD, // replace with service password
-                                      url: 'https://gateway.watsonplatform.net/assistant/api',
-                                      version: '2018-02-16'
-                                  });
-
-    var cloudant = Cloudant(CLOUDANT_BLOB);
-    var conversations = cloudant.db.use('conversations');
-    conversations.find({"selector": {
-        "phone": 16034653947
-        }}, function(err, data) {
-
-        if (err != null) {
-            throw err;
+    //Query Cloudant for our state information
+    return conversations.find({
+        selector: {
+            phone: 16034653947
+        }
+    }, function (err, data) {
+        if (err) throw err;
+        
+        let state;
+        if (data.docs.length === 1) {
+            state = data.docs[0];
+        } else {
+            state = {
+                phone: 16034653947,
+                watsonContext: null
+            }
         }
 
-        service.message({
-                            input: {text: "What time is it"},
-                            workspace_id: WATSON_WORKSPACE_ID
-                        }, function(watsonErr, watsonResponse) {
+        return watsonService.message({
+            input: {text: 'What time is it'},
+            workspace_id: WATSON_WORKSPACE_ID,
+            context: state.watsonContext
+        }, function (watsonErr, watsonResponse) {
+            if (watsonErr) throw err;
 
+            state.watsonContext = watsonResponse.context;
 
-            if (err) {
-                console.error(err); // something went wrong
-                return;
-            }
-
-            console.log("Watson response:");
+            console.log('Watson response:');
             for (var message of watsonResponse.output.text) {
                 console.log(message)
             }
 
-            var doc;
-            if (data.docs.length === 1) {
-                doc = data.docs[0];
-            } else {
-                doc = {
-                    "phone": 16034653947,
-                    "watson-context": null
-                }
-            }
-            doc["watson-context"] = watsonResponse.context;
+            conversations.insert(state, function (newErr, newResult) {
+                if (newErr) throw err;
 
-            conversations.insert(doc, function(newErr, newResult) {
-                console.log("Updated document")
+                console.log('Updated state document')
             })
         });
 
 
     });
     /*var result = conversations.insert({'phone': '16034653947', 'watson-context': 'test'}, function(err, result) {
-        console.log("Inserted: " + err + result);
+        console.log('Inserted: ' + err + result);
 
         return client.messages
           .create({
                       to: '+17205562453',
                       from: '+18508765124',
-                      body: "Tomorrow's forecast in Financial District, San Francisco is Clear",
+                      body: 'Tomorrow's forecast in Financial District, San Francisco is Clear',
                       mediaUrl: 'https://climacons.herokuapp.com/clear.png',
                   });
     });*/
