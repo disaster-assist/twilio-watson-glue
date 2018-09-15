@@ -1,5 +1,11 @@
 language: node_js
+
+git:
+  submodules: false
+
+
 before_install:
-- echo -e "machine github.com\n  login $CI_USER_TOKEN" > ~/.netrc
+  - echo -e "machine github.com\n  login $CI_USER_TOKEN" > ~/.netrc
+  - git submodule update --init --recursive 
 script: npx webpack
 after_success: yarn deploy:update
