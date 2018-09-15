@@ -1,0 +1,16 @@
+{
+  "name": "twilio-watson-glue",
+  "version": "1.0.0",
+  "description": "This repository is intended to receive incoming webhook requests from Twilio via the IBM API Gateway then forward them into Watson.",
+  "main": "src/index.js",
+  "repository": "git@github.com:disaster-assist/twilio-watson-glue.git",
+  "author": "jakebillings <jake@jakebillings.com>",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "deploy:create": "ibmcloud fn action create twilio-watson-glue src/index.js",
+    "deploy:update": "ibmcloud fn action update twilio-watson-glue src/index.js",
+    "deploy:delete": "ibmcloud fn action delete twilio-watson-glue",
+    "deploy:invoke": "ibmcloud fn action invoke twilio-watson-glue --blocking --result"
+  }
+}
