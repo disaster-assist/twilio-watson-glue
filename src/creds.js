@@ -48,5 +48,6 @@ module.exports = {
     watsonService: watsonService,
     cloudant: client,
     conversations: conversations,
+    WATSON_WORKSPACE_ID: WATSON_WORKSPACE_ID,
     storeLocation: storeLocation
 }
