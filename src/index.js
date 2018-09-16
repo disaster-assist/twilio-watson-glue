@@ -6,35 +6,21 @@ const {
     WATSON_BLOB,
     CLOUDANT_BLOB,
     TWILIO_FROM_NUMBER,
-    GOOGLE_GEOCODING_API_KEY
-} = require('./disaster-credentials/credentials');
+    GOOGLE_GEOCODING_API_KEY,
+    Cloudant,
+    AssistantV1,
+    twilio,
+    client,
+    watsonService,
+    cloudant,
+    conversations
+} = require('./creds');
 
 var _ = require('underscore');
 
 //Default values for when we invoke this locally on test machines
 const DEFAULT_NUMBER = '+17205562453';
 const DEFUALT_BODY = "E Complex RPI Troy NY";
-
-//Pull in required libraries
-const Cloudant = require('@cloudant/cloudant');
-const AssistantV1 = require('watson-developer-cloud/assistant/v1');
-const twilio = require('twilio');
-
-//Initialize the Twilio module and create a REST client
-const client = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN);
-
-//Initialize Assistant Watson Service wrapper
-let watsonService = new AssistantV1(_.extend(WATSON_BLOB, {'version': '2018-02-16'}));
-
-//Initialize Cloudant connection
-const cloudant = Cloudant(_.extend(CLOUDANT_BLOB, {'plugins': 'promises'}));
-const conversations = cloudant.db.use('conversations');
-
-var googleMapsClient = require('@google/maps').createClient(
-  {
-      key: GOOGLE_GEOCODING_API_KEY,
-      Promise: Promise
-  });
 
 function asBool(envVar, defaultVal) {
     return (process.env[envVar]!==undefined) ? JSON.parse(process.env[envVar].toLowerCase()) : defaultVal;
@@ -44,20 +30,16 @@ const USE_TWILIO = asBool("USE_TWILIO", true);
 
 const RECEIVED_LOCATION = 'ReceivedLocation';
 
+
+
 function parseWatsonResponse(watsonResponse, state) {
     state.watsonContext = watsonResponse.context;
     if (!!watsonResponse.context.the_location) {
         console.log("Got location: " + watsonResponse.input.text);
 
-        delete watsonResponse.context.the_location
+        delete watsonResponse.context.the_location;
 
-        state.location_date = new Date().getTime();
-        state.raw_location = watsonResponse.input.text;
-        return googleMapsClient.geocode({ address: state.raw_location})
-          .asPromise()
-          .then(resp => {
-              state.parsed_location = resp
-          })
+        return storeLocation(state, watsonResponse.input.text);
     }
     return Promise.resolve({})
 }
@@ -193,7 +175,8 @@ function main(params) {
 }
 
 module.exports = {
-    main
+    main: main,
+    storeLocation: storeLocation
 };
 
 global.main = main;
