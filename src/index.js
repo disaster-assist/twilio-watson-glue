@@ -30,7 +30,7 @@ const USE_TWILIO = asBool("USE_TWILIO", true);
 
 const RECEIVED_LOCATION = 'ReceivedLocation';
 
-
+const {store_location} = require('./creds');
 
 function parseWatsonResponse(watsonResponse, state) {
     state.watsonContext = watsonResponse.context;
@@ -175,8 +175,7 @@ function main(params) {
 }
 
 module.exports = {
-    main: main,
-    storeLocation: storeLocation
+    main: main
 };
 
 global.main = main;
