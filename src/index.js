@@ -5,14 +5,15 @@ const {
     WATSON_WORKSPACE_ID,
     WATSON_BLOB,
     CLOUDANT_BLOB,
-    TWILIO_FROM_NUMBER
+    TWILIO_FROM_NUMBER,
+    GOOGLE_GEOCODING_API_KEY
 } = require('./disaster-credentials/credentials');
 
 var _ = require('underscore');
 
 //Default values for when we invoke this locally on test machines
 const DEFAULT_NUMBER = '+17205562453';
-const DEFUALT_BODY = "RPI Troy NY";
+const DEFUALT_BODY = "E Complex RPI Troy NY";
 
 //Pull in required libraries
 const Cloudant = require('@cloudant/cloudant');
@@ -29,6 +30,12 @@ let watsonService = new AssistantV1(_.extend(WATSON_BLOB, {'version': '2018-02-1
 const cloudant = Cloudant(_.extend(CLOUDANT_BLOB, {'plugins': 'promises'}));
 const conversations = cloudant.db.use('conversations');
 
+var googleMapsClient = require('@google/maps').createClient(
+  {
+      key: GOOGLE_GEOCODING_API_KEY,
+      Promise: Promise
+  });
+
 function asBool(envVar, defaultVal) {
     return (process.env[envVar]!==undefined) ? JSON.parse(process.env[envVar].toLowerCase()) : defaultVal;
 }
@@ -38,13 +45,20 @@ const USE_TWILIO = asBool("USE_TWILIO", true);
 const RECEIVED_LOCATION = 'ReceivedLocation';
 
 function parseWatsonResponse(watsonResponse, state) {
+    state.watsonContext = watsonResponse.context;
     if (!!watsonResponse.context.the_location) {
         console.log("Got location: " + watsonResponse.input.text);
-        state.location = watsonResponse.input.text;
-        delete watsonResponse.context.the_location
-    }
 
-    state.watsonContext = watsonResponse.context;
+        delete watsonResponse.context.the_location
+
+        state.raw_location = watsonResponse.input.text;
+        return googleMapsClient.geocode({ address: state.raw_location})
+          .asPromise()
+          .then(resp => {
+              state.parsed_location = resp
+          })
+    }
+    return Promise.resolve({})
 }
 
 function sendSMS(params, message) {
@@ -131,10 +145,11 @@ function main(params) {
             console.log(message);
         }
 
-        parseWatsonResponse(watsonResponse, data.state);
-
-        return conversations.insert(data.state)
-          .then(_ => watsonResponse);
+        return parseWatsonResponse(watsonResponse, data.state)
+          .then(() => {
+              return conversations.insert(data.state)
+                .then(_ => watsonResponse);
+          })
     }).then(watsonResponse => {
         //Send the response from Watson Assistant back to the sender
         // via the Twilio API
