@@ -51,6 +51,7 @@ function parseWatsonResponse(watsonResponse, state) {
 
         delete watsonResponse.context.the_location
 
+        state.location_date = new Date().getTime();
         state.raw_location = watsonResponse.input.text;
         return googleMapsClient.geocode({ address: state.raw_location})
           .asPromise()
