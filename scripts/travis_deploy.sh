@@ -1,3 +1,10 @@
-bx login -a https://api.ng.bluemix.net
-bx target --cf-api https://api.ng.bluemix.net -o Disaster-Assist -s dev
-yarn deploy:update
+./travis_deploy_impl.sh
+retval=$?
+if [ retval -eq 0 ]; then
+    ./send.sh success $DISCORD_WEBHOOK
+else
+    ./send.sh failure $DISCORD_WEBHOOK
+    
+fi
+
+exit $retval
