@@ -25,6 +25,7 @@ address = process.argv[2];
 state = {
     phone: Fakerator().phone.number(),
     watsonContext: null,
+    fake: true
 };
 
 console.log("Address: " + address);
