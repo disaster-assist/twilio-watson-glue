@@ -49,5 +49,6 @@ module.exports = {
     cloudant: client,
     conversations: conversations,
     WATSON_WORKSPACE_ID: WATSON_WORKSPACE_ID,
+    TWILIO_FROM_NUMBER: TWILIO_FROM_NUMBER,
     storeLocation: storeLocation
 }
