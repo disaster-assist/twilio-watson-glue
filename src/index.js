@@ -13,7 +13,8 @@ const {
     client,
     watsonService,
     cloudant,
-    conversations
+    conversations,
+    storeLocation
 } = require('./creds');
 
 var _ = require('underscore');
