@@ -12,7 +12,7 @@ var _ = require('underscore');
 
 //Default values for when we invoke this locally on test machines
 const DEFAULT_NUMBER = '+17205562453';
-const DEFUALT_BODY = "Hi";
+const DEFUALT_BODY = "RPI Troy NY";
 
 //Pull in required libraries
 const Cloudant = require('@cloudant/cloudant');
@@ -28,6 +28,38 @@ let watsonService = new AssistantV1(_.extend(WATSON_BLOB, {'version': '2018-02-1
 //Initialize Cloudant connection
 const cloudant = Cloudant(_.extend(CLOUDANT_BLOB, {'plugins': 'promises'}));
 const conversations = cloudant.db.use('conversations');
+
+function asBool(envVar, defaultVal) {
+    return (process.env[envVar]!==undefined) ? JSON.parse(process.env[envVar].toLowerCase()) : defaultVal;
+}
+
+const USE_TWILIO = asBool("USE_TWILIO", true);
+
+const RECEIVED_LOCATION = 'ReceivedLocation';
+
+function parseWatsonResponse(watsonResponse, state) {
+    if (!!watsonResponse.context.the_location) {
+        console.log("Got location: " + watsonResponse.input.text);
+        state.location = watsonResponse.input.text;
+        delete watsonResponse.context.the_location
+    }
+
+    state.watsonContext = watsonResponse.context;
+}
+
+function sendSMS(params, message) {
+    if (USE_TWILIO) {
+        return client.messages
+          .create({
+                      to: params.From,
+                      from: TWILIO_FROM_NUMBER,
+                      body: message,
+                  })
+    } else {
+        return Promise.resolve({})
+    }
+
+}
 
 /**
  * main()
@@ -45,6 +77,8 @@ function main(params) {
         params.From = DEFAULT_NUMBER;
         params.Body = DEFUALT_BODY;
     }
+
+    console.log("Using Twilio: " + USE_TWILIO);
 
 
     return conversations.find({
@@ -88,26 +122,31 @@ function main(params) {
               }
           })
     }).then(data => {
-        return conversations.insert(data.state)
-          .then(_ => data.watsonResponse)
-    }).then(watsonResponse => {
+        watsonResponse = data.watsonResponse;
         console.log('Updated state document');
 
+        console.log("Watson context: " + watsonResponse.context);
         console.log('Watson response:');
         for (let message of watsonResponse.output.text) {
             console.log(message);
         }
 
+        parseWatsonResponse(watsonResponse, data.state);
+
+        return conversations.insert(data.state)
+          .then(_ => watsonResponse);
+    }).then(watsonResponse => {
         //Send the response from Watson Assistant back to the sender
         // via the Twilio API
+
+        let textResponse = 'Got an empty response from Watson!';
         if (watsonResponse.output.text.length > 0) {
-            return client.messages
-              .create({
-                          to: params.From,
-                          from: TWILIO_FROM_NUMBER,
-                          body: watsonResponse.output.text.join("\n"),
-                      })
+            textResponse = watsonResponse.output.text.join("\n");
         }
+
+        return sendSMS(params, textResponse)
+
+
     }).then((resp) => {
         console.log("Message sent! " + resp);
         return {
@@ -118,9 +157,14 @@ function main(params) {
             body: ''
         };
     }).catch(err => {
-        console.log("Error occurred!");
+        console.log("Error occurred: " + err);
 
-        return client.messages
+        return sendSMS(params, "An internal error occured: " + err)
+          .then(resp => {
+              console.error("Send error text message to " + params.From);
+          })
+
+        /*return client.messages
           .create({
                       to: params.From,
                       from: TWILIO_FROM_NUMBER,
@@ -128,7 +172,7 @@ function main(params) {
                   })
           .then(resp => {
               console.error("Send error text message to " + params.From);
-          })
+          })*/
     })
 }
 
