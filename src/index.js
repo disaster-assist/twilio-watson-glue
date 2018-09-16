@@ -179,7 +179,7 @@ function main(params) {
               console.error("Send error text message to " + params.From);
           })
 
-        /*return client.messages
+        return client.messages
           .create({
                       to: params.From,
                       from: TWILIO_FROM_NUMBER,
@@ -187,7 +187,7 @@ function main(params) {
                   })
           .then(resp => {
               console.error("Send error text message to " + params.From);
-          })*/
+          })
     })
 }
 
